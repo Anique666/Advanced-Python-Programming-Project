@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Instructions for deploying GeoGuessr-lite to cloud platforms.
+Instructions for deploying Street Smarts to cloud platforms.
 
 ## Heroku (Easiest Option)
 
@@ -104,8 +104,8 @@ CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ### Build and run
 ```bash
-docker build -t geoguessrlite .
-docker run -p 8000:8000 -e GOOGLE_STREETVIEW_KEY=your_key geoguessrlite
+docker build -t street-smarts .
+docker run -p 8000:8000 -e GOOGLE_STREETVIEW_KEY=your_key street-smarts
 ```
 
 ## Production Checklist

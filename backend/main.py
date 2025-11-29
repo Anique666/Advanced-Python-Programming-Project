@@ -33,7 +33,9 @@ DB_PATH = os.path.join(BASE_DIR, "app.db")
 CACHE_DIR = os.path.join(BASE_DIR, "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-JWT_SECRET = os.getenv("JWT_SECRET", "change-this-secret-in-prod")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required. Please set it in your .env file.")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # not enforced in this simple example
 

@@ -1,4 +1,4 @@
-# Setup Guide for GeoGuessr-lite
+# Setup Guide for Street Smarts
 
 This guide walks you through setting up the project for local development or sharing with others.
 
@@ -21,8 +21,8 @@ This guide walks you through setting up the project for local development or sha
 ## 2. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/geoguessrlite.git
-cd geoguessrlite
+git clone https://github.com/Adithya-Git05/Advanced-Python-Programming---Project.git
+cd Advanced-Python-Programming---Project
 ```
 
 ## 3. Create Virtual Environment

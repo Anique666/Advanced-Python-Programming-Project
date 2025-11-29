@@ -1,9 +1,9 @@
 """
-Streamlit frontend for the GeoGuessr-style game.
+Streamlit frontend for Street Smarts - a geography guessing game.
 
 Features:
 - Registration and login with JWT tokens
-- 10-round gameplay per session
+- 5-round gameplay per session
 - Cached Google Street View images
 - Interactive map with location pinning
 - Confetti animations and engaging UI

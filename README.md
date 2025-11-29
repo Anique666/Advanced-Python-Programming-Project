@@ -32,8 +32,8 @@ A FastAPI backend + Streamlit frontend geography guessing game powered by Google
 
 1. **Clone the repository**
    ```bash
-   git clone <repo-url>
-   cd app-project
+   git clone https://github.com/Adithya-Git05/Advanced-Python-Programming---Project.git
+   cd Advanced-Python-Programming---Project
    ```
 
 2. **Create virtual environment**
@@ -141,7 +141,7 @@ See full API docs at http://localhost:8000/docs
 ## Project Structure
 
 ```
-app-project/
+Advanced-Python-Programming---Project/
 ├── backend/
 │   ├── main.py           # FastAPI app, routes, game logic
 │   ├── app.db            # SQLite database (auto-generated)
