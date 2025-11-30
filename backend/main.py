@@ -268,6 +268,12 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
+@app.get("/")
+def root():
+    """Health check endpoint."""
+    return {"status": "ok", "message": "Street Smarts API is running!"}
+
+
 @app.post("/register", status_code=201)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     # Create a new user with a securely hashed password
