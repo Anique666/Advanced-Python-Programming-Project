@@ -33,6 +33,7 @@ from datetime import datetime
 # Configuration
 # --------------------
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")  # For interactive Street View
 ROUNDS_PER_GAME = 5  # 5 rounds per game
 
 
@@ -55,6 +56,179 @@ def get_image_url(image_path: str) -> str:
     # Extract just the filename from the path and serve via backend
     filename = os.path.basename(image_path)
     return f"{BACKEND_URL}/cache/{filename}"
+
+
+def get_interactive_streetview_html(lat: float, lng: float, api_key: str) -> str:
+    """Generate interactive Google Street View panorama HTML/JS.
+    
+    Features:
+    - Full 360° panoramic view
+    - User can look around (pan/tilt)
+    - User can move along streets (if available)
+    - Road labels and address hidden to prevent cheating
+    - Random initial heading for variety
+    
+    Args:
+        lat: Latitude of the location
+        lng: Longitude of the location
+        api_key: Google Maps JavaScript API key
+    
+    Returns:
+        HTML string with embedded Street View panorama
+    """
+    import random
+    initial_heading = random.randint(0, 360)
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            #street-view {{
+                width: 100%;
+                height: 500px;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            }}
+            #error-message {{
+                display: none;
+                width: 100%;
+                height: 500px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 12px;
+                color: white;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }}
+            #error-message h3 {{
+                font-size: 24px;
+                margin-bottom: 10px;
+            }}
+            #error-message p {{
+                font-size: 16px;
+                opacity: 0.9;
+            }}
+            #loading {{
+                width: 100%;
+                height: 500px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                border-radius: 12px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }}
+            #loading .spinner {{
+                font-size: 50px;
+                animation: spin 1s linear infinite;
+            }}
+            @keyframes spin {{
+                0% {{ transform: rotate(0deg); }}
+                100% {{ transform: rotate(360deg); }}
+            }}
+            #loading p {{
+                margin-top: 15px;
+                color: #667eea;
+                font-weight: 600;
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="loading">
+            <div class="spinner">🌍</div>
+            <p>Loading Street View...</p>
+        </div>
+        <div id="street-view"></div>
+        <div id="error-message">
+            <h3>📍 Street View Unavailable</h3>
+            <p>No Street View imagery available for this location.<br>Try submitting your best guess based on the hint!</p>
+        </div>
+        
+        <script>
+            let panorama;
+            
+            function initStreetView() {{
+                const location = {{lat: {lat}, lng: {lng}}};
+                
+                // Check if Street View is available at this location
+                const streetViewService = new google.maps.StreetViewService();
+                
+                streetViewService.getPanorama(
+                    {{
+                        location: location,
+                        radius: 1000,  // Search within 1km radius
+                        preference: google.maps.StreetViewPreference.NEAREST,
+                        source: google.maps.StreetViewSource.OUTDOOR
+                    }},
+                    function(data, status) {{
+                        document.getElementById('loading').style.display = 'none';
+                        
+                        if (status === google.maps.StreetViewStatus.OK) {{
+                            document.getElementById('street-view').style.display = 'block';
+                            
+                            panorama = new google.maps.StreetViewPanorama(
+                                document.getElementById('street-view'),
+                                {{
+                                    position: data.location.latLng,
+                                    pov: {{
+                                        heading: {initial_heading},
+                                        pitch: 0
+                                    }},
+                                    zoom: 1,
+                                    // Hide UI elements that could give away location
+                                    addressControl: false,
+                                    showRoadLabels: false,
+                                    // Keep navigation controls for better UX
+                                    linksControl: true,
+                                    panControl: true,
+                                    zoomControl: true,
+                                    fullscreenControl: true,
+                                    motionTracking: false,
+                                    motionTrackingControl: false,
+                                    // Styling
+                                    scrollwheel: true,
+                                    disableDefaultUI: false,
+                                    enableCloseButton: false
+                                }}
+                            );
+                        }} else {{
+                            // No Street View available
+                            document.getElementById('error-message').style.display = 'flex';
+                        }}
+                    }}
+                );
+            }}
+            
+            // Handle API load errors
+            function handleApiError() {{
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-message').style.display = 'flex';
+                document.getElementById('error-message').innerHTML = `
+                    <h3>⚠️ API Error</h3>
+                    <p>Could not load Google Maps API.<br>Please check your API key configuration.</p>
+                `;
+            }}
+        </script>
+        <script 
+            src="https://maps.googleapis.com/maps/api/js?key={api_key}&callback=initStreetView"
+            async 
+            defer
+            onerror="handleApiError()"
+        ></script>
+    </body>
+    </html>
+    """
 
 
 def api_post(path, token=None, json_body=None, data=None):
@@ -330,12 +504,22 @@ def main():
         hint = get_subtle_hint(loc['name'])
         st.markdown(f"💡 **Hint:** {hint}")
 
-        # Display the cached image (convert local path to HTTP URL)
-        if loc.get("image_url"):
+        # Display interactive Street View panorama
+        if GOOGLE_MAPS_API_KEY:
+            # Use interactive Street View (recommended)
+            streetview_html = get_interactive_streetview_html(
+                lat=loc["lat"],
+                lng=loc["lng"],
+                api_key=GOOGLE_MAPS_API_KEY
+            )
+            st.components.v1.html(streetview_html, height=520, scrolling=False)
+            st.caption("🎮 **Tip:** Drag to look around, click arrows to move along streets!")
+        elif loc.get("image_url"):
+            # Fallback to static image if no API key configured
             image_url = get_image_url(loc["image_url"])
             st.image(image_url, use_container_width=True, caption="📸 Street View - Click the map to guess!")
         else:
-            st.warning("⚠️ No Street View image available for this location.")
+            st.warning("⚠️ No Street View available. Configure GOOGLE_MAPS_API_KEY for interactive view.")
 
         st.markdown("---")
 

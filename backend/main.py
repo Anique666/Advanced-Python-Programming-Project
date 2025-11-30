@@ -50,7 +50,9 @@ if not GOOGLE_STREETVIEW_KEY:
     raise ValueError("GOOGLE_STREETVIEW_KEY environment variable is required. Please set it in your .env file.")
 
 MAX_POINTS = 5000
-SCORE_SCALE_METERS = 20000.0  # decay scale for exponential scoring
+# Max distance is the diagonal of the playable map area (approximately the world map diagonal)
+# Earth's circumference is ~40,075 km, diagonal of world rectangle ≈ 20,000 km
+MAX_DISTANCE_METERS = 20000000.0  # 20,000 km - diagonal of world map
 
 # --------------------
 # Rate Limiting
@@ -309,8 +311,21 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 
 
 def compute_points(distance_meters: float) -> int:
-    # Exponentially decaying scoring: max at zero distance, decays with distance
-    points = MAX_POINTS * math.exp(-distance_meters / SCORE_SCALE_METERS)
+    """Calculate score using exponential decay formula.
+    
+    Formula: 5000 * e^(-10 * distance / max_distance)
+    
+    Where max_distance is the diagonal of the smallest rectangle
+    that would contain every location on the map (~20,000 km for world map).
+    
+    This gives:
+    - Perfect guess (0m): 5,000 points
+    - 200 km off: ~4,524 points
+    - 1,000 km off: ~3,033 points
+    - 5,000 km off: ~410 points
+    - 10,000 km off: ~33 points
+    """
+    points = MAX_POINTS * math.exp(-10 * distance_meters / MAX_DISTANCE_METERS)
     return max(0, int(round(points)))
 
 
