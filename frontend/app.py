@@ -1,5 +1,5 @@
 """
-Streamlit frontend for Street Smarts - a geography guessing game.
+Streamlit frontend for Where Am I? - a geography guessing game.
 
 Features:
 - Registration and login with JWT tokens
@@ -555,7 +555,7 @@ def get_result_map_html(guess_lat: float, guess_lng: float, actual_lat: float, a
             }});
             L.marker([{actual_lat}, {actual_lng}], {{icon: actualIcon}})
                 .addTo(map)
-                .bindPopup('<b>✅ {actual_name}</b>');
+                .bindPopup('<b>📍 {actual_name}</b>');
             
             // Line between guess and actual
             var line = L.polyline([
@@ -635,13 +635,13 @@ def show_auth_page():
         st.markdown("""
         <div style='text-align: center; padding: 20px 0 30px 0;'>
             <h1 style='font-size: 48px; margin-bottom: 5px;'>🌍</h1>
-            <h1 style='color: #667eea; font-size: 32px; margin-bottom: 10px;'>Street Smarts</h1>
+            <h1 style='color: #667eea; font-size: 32px; margin-bottom: 10px;'>Where Am I?</h1>
             <p style='color: #666; font-size: 16px;'>Test your geography skills with Google Street View</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Create tabs for Login and Register
-        tab_login, tab_register = st.tabs(["🔓 Login", "✅ Register"])
+        tab_login, tab_register = st.tabs(["🔓 Login", "📝 Register"])
         
         with tab_login:
             st.markdown("<br>", unsafe_allow_html=True)
@@ -656,7 +656,7 @@ def show_auth_page():
                     ok, token = login_user(login_username, login_password)
                     if ok and token:
                         st.session_state.token = token
-                        st.success("✅ Logged in successfully!")
+                        st.success("Logged in successfully!")
                         time.sleep(0.5)
                         st.rerun()
                     else:
@@ -679,7 +679,7 @@ def show_auth_page():
                 else:
                     ok, resp = register_user(reg_username, reg_password)
                     if ok:
-                        st.success("✅ Account created! You can now login.")
+                        st.success("Account created! You can now login.")
                     else:
                         st.error(f"❌ Registration failed: {resp}")
         
@@ -704,12 +704,12 @@ def main():
     
     # Set page config based on auth status (must be first Streamlit command)
     if not st.session_state.token:
-        st.set_page_config(page_title="Street Smarts - Login", layout="centered", initial_sidebar_state="collapsed")
+        st.set_page_config(page_title="Where Am I? - Login", layout="centered", initial_sidebar_state="collapsed")
         show_auth_page()
         return
     
     # User is logged in - show the game with wide layout
-    st.set_page_config(page_title="Street Smarts - Guess The Location", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(page_title="Where Am I?", layout="wide", initial_sidebar_state="expanded")
 
     # Custom CSS for better styling
     st.markdown("""
@@ -738,13 +738,13 @@ def main():
     # Header with emoji
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("<h1>🌍 Street Smarts - Guess The Location 🎯</h1>", unsafe_allow_html=True)
+        st.markdown("<h1>🌍 Where Am I? 🎯</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #666;'>Test your geography skills with Google Street View</p>", unsafe_allow_html=True)
 
     # Sidebar: logout and leaderboard (user is already logged in)
     with st.sidebar:
         st.markdown("### 👤 Account")
-        st.success(f"✅ Logged in")
+        st.success(f"Logged in")
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.token = None
             st.session_state.game = new_game_state()
@@ -907,7 +907,7 @@ def main():
             with col_coords:
                 st.markdown(f"📍 **Your guess:** `{guess_lat:.4f}, {guess_lng:.4f}`")
             with col_submit:
-                if st.button("✅ Submit Guess", use_container_width=True, type="primary", key=f"submit_{st.session_state.game['round']}"):
+                if st.button("Submit Guess", use_container_width=True, type="primary", key=f"submit_{st.session_state.game['round']}"):
                     payload = {"location_id": loc["id"], "guess_lat": guess_lat, "guess_lng": guess_lng}
                     result = api_post("/submit_guess", token=st.session_state.token, json_body=payload)
                     if result:
